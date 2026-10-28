@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>
+   Deadlock Lens Research Simulator
+  </title>
+  <style>
+   *{box-sizing:border-box}body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:#f3f6fb;color:#17263c}header{background:linear-gradient(120deg,#10243e,#245c91);color:white;padding:24px max(18px,calc((100% - 1150px)/2))}h1{margin:0;font-size:27px}header p{color:#d7e7fb;margin:7px 0 0}main{max-width:1150px;margin:22px auto;padding:0 16px}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.tab,button{border:0;border-radius:8px;padding:10px 13px;cursor:pointer;font-weight:700;background:#2463eb;color:white}.tab{background:white;color:#294567;border:1px solid #d7e0ec}.tab.active{background:#2463eb;color:white}.layout{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{background:white;border:1px solid #dce4ef;border-radius:14px;padding:17px;margin-bottom:16px;box-shadow:0 5px 16px #152b4708}h2{font-size:17px;margin:0 0 12px;color:#10243e}h3{font-size:14px;margin:14px 0 8px}.muted{font-size:12px;color:#667890;line-height:1.5}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:#61738a}input,select{border:1px solid #cbd6e4;border-radius:7px;padding:8px;width:105px}button.secondary{background:#e9f1fc;color:#224c7e}button.green{background:#087f5b}.services{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.svc{border:1px solid #dce4ef;border-radius:10px;padding:10px;background:#f8fbff}.svc b{display:block;margin-bottom:7px}.svc select{width:100%}.result{padding:12px;border-radius:9px;font-weight:800;font-size:13px;margin:10px 0}.good{background:#e3f8ed;color:#086447}.bad{background:#fff0f0;color:#a62e3b}.info{background:#edf5ff;color:#24528a}svg{width:100%;background:#fbfdff;border:1px solid #dce4ef;border-radius:10px;min-height:270px}.trace{background:#101d30;color:#c9dcf5;border-radius:9px;padding:12px;white-space:pre-wrap;font:12px/1.6 Consolas,monospace;max-height:260px;overflow:auto}.table{width:100%;border-collapse:collapse;font-size:12px}.table td,.table th{border:1px solid #dce4ef;padding:8px;text-align:left}.table th{background:#eef4fb}.hide{display:none}.paper{border-left:4px solid #2463eb;background:#f0f6ff;padding:12px;border-radius:0 9px 9px 0;font-size:13px;line-height:1.6}@media(max-width:800px){.layout{grid-template-columns:1fr}.services{grid-template-columns:1fr}}
+  </style>
+ </head>
+ <body>
+  <header>
+   <h1>
+    Deadlock Lens &middot; Research Simulation
+   </h1>
+   <p>
+    Operating Systems SLA &middot; Traditional Detection + Latest Research Application
+   </p>
+  </header>
+  <main>
+   <div class="tabs">
+    <button class="tab active" onclick="tab('research',this)">
+     Research Monitor Simulation
+    </button>
+    <button class="tab" onclick="tab('traditional',this)">
+     Traditional Matrix Detection
+    </button>
+    <button class="tab" onclick="tab('paper',this)">
+     Research Findings
+    </button>
+   </div>
+   <section id="research">
+    <div class="layout">
+     <div>
+      <div class="card">
+       <h2>
+        1. Configure service dependencies
+       </h2>
+       <p class="muted">
+        This educational model represents services waiting for responses from other services. Each service's outgoing dependency means &ldquo;waiting for&rdquo; the target. The 2025 paper studies monitors that observe incoming/outgoing messages and exchange probes to detect distributed deadlocks.
+       </p>
+       <div class="row">
+        <label>
+         Scenario
+         <select id="rs" onchange="loadResearch()">
+          <option value="cycle">
+           Deadlock cycle
+          </option>
+          <option value="none">
+           No deadlock
+          </option>
+          <option value="hidden">
+           Long dependency chain + cycle
+          </option>
+          <option value="custom">
+           Custom
+          </option>
+         </select>
+        </label>
+        <button class="secondary" onclick="loadResearch()">
+         Load scenario
+        </button>
+        <button class="green" onclick="runResearch()">
+         Run monitor
+        </button>
+       </div>
+       <h3>
+        Service wait-for dependencies
+       </h3>
+       <div class="services" id="services">
+       </div>
+       <p class="muted">
+        Select the service each service is waiting for, or choose &ldquo;None&rdquo;. Maximum 6 services. This is a simplified teaching model, not the authors' DDMon implementation.
+       </p>
+      </div>
+      <div class="card">
+       <h2>
+        2. What the monitor observes
+       </h2>
+       <div class="paper">
+        Monitor concept from the paper: observe incoming/outgoing messages for each service and exchange probes with other monitors to determine whether a distributed wait cycle exists. The paper reports a sound-and-complete algorithm for its formal model and an implementation called DDMon for Erlang/OTP.
+       </div>
+      </div>
+     </div>
+     <div>
+      <div class="card">
+       <h2>
+        3. Simulation result
+       </h2>
+       <div class="result info" id="rv">
+        Load a scenario and run the monitor.
+       </div>
+       <h3>
+        Dependency graph
+       </h3>
+       <svg aria-label="Service dependency graph" id="rg" viewbox="0 0 600 320">
+       </svg>
+       <h3>
+        Monitor trace
+       </h3>
+       <div class="trace" id="rt">
+        No simulation run yet.
+       </div>
+      </div>
+      <div class="card">
+       <h2>
+        4. Interpretation
+       </h2>
+       <div class="muted" id="interpret">
+        The simulator checks whether the directed wait-for graph contains a cycle. In a distributed application, the research approach uses per-service monitors and probe exchange; this visual model abstracts those details.
+       </div>
+      </div>
+     </div>
+    </div>
+   </section>
+   <section class="hide" id="traditional">
+    <div class="layout">
+     <div class="card">
+      <h2>
+       Classical multiple-instance detection
+      </h2>
+      <p class="muted">
+       Allocation = resources currently held. Request = additional resources currently requested. Available = free instances.
+      </p>
+      <div class="row">
+       <label>
+        Processes
+        <input id="n" max="5" min="1" type="number" value="3"/>
+       </label>
+       <label>
+        Resource types
+        <input id="m" max="3" min="1" type="number" value="3"/>
+       </label>
+       <button onclick="buildMatrix()">
+        Set size
+       </button>
+       <button class="secondary" onclick="matrixSample()">
+        Load deadlock example
+       </button>
+      </div>
+      <div id="mat">
+      </div>
+      <button class="green" onclick="runMatrix()">
+       Run classical detection
+      </button>
+      <div class="result info" id="mv">
+       Enter matrices and run detection.
+      </div>
+     </div>
+     <div class="card">
+      <h2>
+       Traditional execution trace
+      </h2>
+      <div class="trace" id="mt">
+       No simulation run yet.
+      </div>
+      <p class="muted">
+       This matrix algorithm is different from the 2025 distributed-monitor research. Use it as the traditional baseline in the SLA.
+      </p>
+     </div>
+    </div>
+   </section>
+   <section class="hide" id="paper">
+    <div class="card">
+     <h2>
+      Latest research paper used for the research-based simulation
+     </h2>
+     <p>
+      <b>
+       Title:
+      </b>
+      Correct Black-Box Monitors for Distributed Deadlock Detection: Formalisation and Implementation
+     </p>
+     <p>
+      <b>
+       Authors:
+      </b>
+      Rados&lstrok;aw Jan Rowicki, Adrian Francalanza, Alceste Scalas &middot;
+      <b>
+       Year:
+      </b>
+      2025 &middot;
+      <b>
+       Venue:
+      </b>
+      Proceedings of the ACM on Programming Languages, 9(OOPSLA2), Article 291, pp. 527&ndash;554.
+     </p>
+     <p>
+      <b>
+       Problem:
+      </b>
+      In message-based services, one deadlocked service can cause other services to wait, hiding the core deadlock and making diagnosis difficult.
+     </p>
+     <p>
+      <b>
+       Approach:
+      </b>
+      Deploy a monitor beside each service. Monitors observe incoming and outgoing messages and exchange probes. The authors formalise their model and report soundness and completeness for the supported model.
+     </p>
+     <p>
+      <b>
+       Implementation:
+      </b>
+      The authors implemented DDMon for monitoring Erlang/OTP applications and evaluated its performance.
+     </p>
+     <p>
+      <b>
+       Application demonstrated here:
+      </b>
+      A simplified dependency graph shows how a wait cycle can be surfaced. It illustrates the paper's motivation and core concept, but does not reproduce DDMon or its formal proof.
+     </p>
+     <p>
+      <b>
+       Limitations:
+      </b>
+      This is a teaching simulation using a static directed graph. It does not inspect live network messages, implement probe protocol, or prove soundness/completeness.
+     </p>
+     <p>
+      <b>
+       Source:
+      </b>
+      <a href="https://doi.org/10.1145/3763069" target="_blank">
+       DOI: 10.1145/3763069
+      </a>
+      &middot;
+      <a href="https://arxiv.org/abs/2508.14851" target="_blank">
+       Open preprint
+      </a>
+     </p>
+     <h3>
+      Traditional vs research-based approach
+     </h3>
+     <table class="table">
+      <tr>
+       <th>
+        Aspect
+       </th>
+       <th>
+        Traditional matrix detection
+       </th>
+       <th>
+        2025 research concept
+       </th>
+      </tr>
+      <tr>
+       <td>
+        System model
+       </td>
+       <td>
+        Processes and resource instances
+       </td>
+       <td>
+        Distributed services exchanging messages/RPC
+       </td>
+      </tr>
+      <tr>
+       <td>
+        Input
+       </td>
+       <td>
+        Available, Allocation, Request
+       </td>
+       <td>
+        Observed incoming/outgoing messages and monitor probes
+       </td>
+      </tr>
+      <tr>
+       <td>
+        Detection idea
+       </td>
+       <td>
+        Repeatedly finish process if Request &le; Work
+       </td>
+       <td>
+        Monitors coordinate to identify distributed deadlocked services
+       </td>
+      </tr>
+      <tr>
+       <td>
+        Output
+       </td>
+       <td>
+        Unfinished processes
+       </td>
+       <td>
+        Services identified as deadlocked in the supported formal model
+       </td>
+      </tr>
+      <tr>
+       <td>
+        Our implementation
+       </td>
+       <td>
+        Classical algorithm implemented in this page
+       </td>
+       <td>
+        Conceptual graph simulation only; not DDMon
+       </td>
+      </tr>
+     </table>
+    </div>
+   </section>
+  </main>
+  <script>
+   let deps=[],names=['API','Auth','Database','Payment','Queue','Worker'];
+function tab(id,b){document.querySelectorAll('section').forEach(x=>x.classList.add('hide'));document.getElementById(id).classList.remove('hide');document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active')}
+function setDeps(a){deps=a;const box=document.getElementById('services');box.innerHTML=deps.map((d,i)=>'<div class="svc"><b>'+names[i]+'</b><label>Waiting for<select data-service="'+i+'"><option value="">None</option>'+deps.map((_,j)=>j!==i?'<option value="'+j+'" '+(String(d)===String(j)?'selected':'')+'>'+names[j]+'</option>':'').join('')+'</select></label></div>').join('');box.querySelectorAll('select').forEach(sel=>sel.addEventListener('change',e=>{deps[+e.target.dataset.service]=e.target.value;document.getElementById('rs').value='custom';drawR()}))}
+function loadResearch(){let s=document.getElementById('rs').value;if(s==='cycle')setDeps(['1','2','0']);else if(s==='none')setDeps(['1','','']);else if(s==='hidden')setDeps(['1','2','3','1','']);else if(s==='custom')setDeps(deps.length?deps:['1','2','0']);document.getElementById('rv').className='result info';document.getElementById('rv').textContent='Scenario ready. Click Run monitor.';drawR()}
+function cycles(){let visited=new Set(),done=new Set(),stack=new Set(),cycleNodes=new Set();function dfs(i,path){if(stack.has(i)){let k=path.indexOf(i);path.slice(k).forEach(x=>cycleNodes.add(x));return}if(done.has(i))return;stack.add(i);path.push(i);let j=deps[i];if(j!==''&&j!==undefined&&j!==null)dfs(+j,path);path.pop();stack.delete(i);done.add(i)}deps.forEach((_,i)=>dfs(i,[]));return [...cycleNodes]}
+function runResearch(){let cyc=cycles(),lines=['Monitor initialised for '+deps.length+' services.','Observe outgoing wait dependencies and corresponding incoming waits.'];deps.forEach((d,i)=>lines.push(names[i]+' waits for '+(d===''||d===undefined?'no service':names[+d])+'.'));lines.push('Exchange conceptual probes along dependency edges.');if(cyc.length){lines.push('Probe traversal returns to a service already in the current path.');lines.push('Cycle found: '+cyc.map(i=>names[i]).join(' → ')+' → '+names[cyc[0]]+'.');document.getElementById('rv').className='result bad';document.getElementById('rv').textContent='POTENTIAL DISTRIBUTED DEADLOCK — cycle includes '+cyc.map(i=>names[i]).join(', ');document.getElementById('interpret').textContent='A circular wait was found in this simplified static graph. The paper’s formal result applies to its defined message-passing model and monitor algorithm; this classroom demo is only a conceptual illustration.'}else{lines.push('No directed wait cycle found in this static graph.');document.getElementById('rv').className='result good';document.getElementById('rv').textContent='NO WAIT CYCLE FOUND in the current graph.';document.getElementById('interpret').textContent='No cycle is present in this graph snapshot. This does not prove a real distributed application is free of all blocking problems; real monitoring depends on the model and observed events.'}document.getElementById('rt').textContent=lines.join('\\n');drawR(cyc)}
+function drawR(cyc=[]){let svg=document.getElementById('rg'),N=deps.length||3,cx=300,cy=155,rad=105,pts=Array.from({length:N},(_,i)=>({x:cx+rad*Math.cos(2*Math.PI*i/N-1.57),y:cy+rad*Math.sin(2*Math.PI*i/N-1.57)})),s='<defs><marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#d9485f"/></marker></defs>';deps.forEach((d,i)=>{if(d!==''&&d!==undefined&&d!==null){let a=pts[i],b=pts[+d];s+='<line x1="'+a.x+'" y1="'+a.y+'" x2="'+b.x+'" y2="'+b.y+'" stroke="#d9485f" stroke-width="2.5" marker-end="url(#ar)"/>'}});pts.forEach((p,i)=>{let col=cyc.includes(i)?'#ffe0e2':'#dff0ff',stroke=cyc.includes(i)?'#c2414b':'#2463eb';s+='<circle cx="'+p.x+'" cy="'+p.y+'" r="31" fill="'+col+'" stroke="'+stroke+'" stroke-width="2"/><text x="'+p.x+'" y="'+(p.y+4)+'" text-anchor="middle" font-size="11" font-weight="700" fill="#17263c">'+names[i]+'</text>'});svg.innerHTML=s}
+function buildMatrix(){let n=Math.max(1,Math.min(5,+document.getElementById('n').value)),m=Math.max(1,Math.min(3,+document.getElementById('m').value));document.getElementById('n').value=n;document.getElementById('m').value=m;let h='';['a','q'].forEach((p,k)=>{h+='<h3>'+(k?'Request':'Allocation')+'</h3><table class="table"><tr><th>Process</th>'+Array.from({length:m},(_,j)=>'<th>R'+(j+1)+'</th>').join('')+'</tr>';for(let i=0;i<n;i++)h+='<tr><td>P'+(i+1)+'</td>'+Array.from({length:m},(_,j)=>'<td><input style="width:55px" type="number" min="0" id="'+p+i+'_'+j+'" value="0"></td>').join('')+'</tr>';h+='</table>'});h+='<h3>Available</h3>'+Array.from({length:m},(_,j)=>'R'+(j+1)+' <input style="width:55px" type="number" min="0" id="v'+j+'" value="0">').join(' ');document.getElementById('mat').innerHTML=h}
+function matrixSample(){buildMatrix();[[1,0,0],[0,1,0],[0,0,1]].forEach((r,i)=>r.forEach((v,j)=>document.getElementById('a'+i+'_'+j).value=v));[[0,1,0],[0,0,1],[1,0,0]].forEach((r,i)=>r.forEach((v,j)=>document.getElementById('q'+i+'_'+j).value=v));for(let j=0;j<3;j++)document.getElementById('v'+j).value=0}
+function runMatrix(){let n=+document.getElementById('n').value,m=+document.getElementById('m').value;let A=[],Q=[],V=[];for(let i=0;i<n;i++){A.push([]);Q.push([]);for(let j=0;j<m;j++){let a=+document.getElementById('a'+i+'_'+j).value,q=+document.getElementById('q'+i+'_'+j).value;if(a<0||q<0||!Number.isInteger(a)||!Number.isInteger(q)){document.getElementById('mv').textContent='Enter non-negative whole numbers.';return}A[i].push(a);Q[i].push(q)}}for(let j=0;j<m;j++)V.push(+document.getElementById('v'+j).value);let W=[...V],F=A.map(r=>r.every(v=>v===0)),seq=[],tr=['Initial Work = ['+W+']'],again=true;while(again){again=false;for(let i=0;i<n;i++){if(F[i])continue;let ok=Q[i].every((x,j)=>x<=W[j]);tr.push('Check P'+(i+1)+': Request ['+Q[i]+'] <= Work ['+W+'] : '+(ok?'YES':'NO'));if(ok){W=W.map((x,j)=>x+A[i][j]);F[i]=true;seq.push('P'+(i+1));tr.push('P'+(i+1)+' finishes; release Allocation. Work = ['+W+']');again=true}}}let b=F.map((f,i)=>f?null:'P'+(i+1)).filter(Boolean);document.getElementById('mv').className='result '+(b.length?'bad':'good');document.getElementById('mv').textContent=b.length?'DEADLOCK DETECTED — unfinished: '+b.join(', '):'NO DEADLOCK — sequence: '+seq.join(' → ');document.getElementById('mt').textContent=tr.join('\\n')}
+buildMatrix();loadResearch();matrixSample();
+  </script>
+ </body>
+</html>
